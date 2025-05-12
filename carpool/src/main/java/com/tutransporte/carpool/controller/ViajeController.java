@@ -17,9 +17,32 @@ public class ViajeController {
     private ViajeRepository viajeRepository;
 
     @GetMapping
-    public List<Viaje> getAllViajes() {
+    public List<Viaje> getAllViajes(
+            @RequestParam(required = false) Long usuarioId,
+            @RequestParam(required = false) String fecha,
+            @RequestParam(required = false) Long destinoId
+    ) {
+        if (usuarioId != null) {
+            return viajeRepository.findByUsuarioId(usuarioId);
+        }
+
+        if (fecha != null && destinoId != null) {
+            return viajeRepository.findByFechaAndDestinoId(fecha, destinoId);
+        }
+
+        if (fecha != null) {
+            return viajeRepository.findByFecha(fecha);
+        }
+
+        if (destinoId != null) {
+            return viajeRepository.findByDestinoId(destinoId);
+        }
+
         return viajeRepository.findAll();
     }
+
+
+
 
     @GetMapping("/{id}")
     public Optional<Viaje> getViajeById(@PathVariable Long id) {

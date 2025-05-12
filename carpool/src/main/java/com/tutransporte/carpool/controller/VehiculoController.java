@@ -2,7 +2,10 @@ package com.tutransporte.carpool.controller;
 
 import com.tutransporte.carpool.model.Vehiculo;
 import com.tutransporte.carpool.repository.VehiculoRepository;
+import com.tutransporte.carpool.repository.ViajeRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,14 +47,24 @@ public class VehiculoController {
             });
     }
 
+    @Autowired
+    private ViajeRepository viajeRepository;
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteVehiculo(@PathVariable Long id) {
+        if (viajeRepository.existsByVehiculoId(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede eliminar el vehículo porque está asociado a algún viaje.");
+        }
+
         return vehiculoRepository.findById(id)
-            .map(vehiculo -> {
-                vehiculoRepository.deleteById(id);
-                return ResponseEntity.noContent().build();
-            })
-            .orElseGet(() -> ResponseEntity.notFound().build());
+                .map(vehiculo -> {
+                    vehiculoRepository.deleteById(id);
+                    return ResponseEntity.noContent().build();
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+
 
 }

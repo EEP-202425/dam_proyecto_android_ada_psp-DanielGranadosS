@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tutransporte.carpool.model.Destino;
 import com.tutransporte.carpool.repository.DestinoRepository;
+import com.tutransporte.carpool.repository.ViajeRepository;
+
 
 @RestController
 @RequestMapping("/api/destinos")
@@ -52,8 +55,16 @@ public class DestinoController {
             });
     }
 
+    @Autowired
+    private ViajeRepository viajeRepository;
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteDestino(@PathVariable Long id) {
+        if (viajeRepository.existsByDestinoId(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede eliminar el destino porque está asociado a algún viaje.");
+        }
+
         return destinoRepository.findById(id)
             .map(destino -> {
                 destinoRepository.deleteById(id);
@@ -61,5 +72,6 @@ public class DestinoController {
             })
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
 }

@@ -2,7 +2,10 @@ package com.tutransporte.carpool.controller;
 
 import com.tutransporte.carpool.model.Usuario;
 import com.tutransporte.carpool.repository.UsuarioRepository;
+import com.tutransporte.carpool.repository.ViajeRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,8 +47,16 @@ public class UsuarioController {
             });
     }
 
+    @Autowired
+    private ViajeRepository viajeRepository;
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteUsuario(@PathVariable Long id) {
+        if (viajeRepository.existsByUsuarioId(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede eliminar el usuario porque está asociado a algún viaje.");
+        }
+
         return usuarioRepository.findById(id)
             .map(usuario -> {
                 usuarioRepository.deleteById(id);
@@ -53,5 +64,6 @@ public class UsuarioController {
             })
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
 }
