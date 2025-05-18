@@ -28,7 +28,6 @@ fun CrearViajeScreen(navController: NavController) {
     val selectedDestino = remember { mutableStateOf<Destino?>(null) }
     val expanded = remember { mutableStateOf(false) }
 
-    // Cargar destinos desde el backend
     LaunchedEffect(Unit) {
         RetrofitInstance.api.getDestinos().enqueue(object : Callback<List<Destino>> {
             override fun onResponse(call: Call<List<Destino>>, response: Response<List<Destino>>) {
