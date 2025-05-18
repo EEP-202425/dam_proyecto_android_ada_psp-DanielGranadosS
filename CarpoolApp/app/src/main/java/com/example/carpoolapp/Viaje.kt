@@ -5,5 +5,6 @@ data class Viaje(
     val fecha: String,
     val hora: String,
     val precio: Double,
-    val plazas: Int
+    val plazas: Int,
+    val destino: Destino? = null
 )

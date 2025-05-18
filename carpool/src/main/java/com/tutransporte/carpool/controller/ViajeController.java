@@ -1,6 +1,8 @@
 package com.tutransporte.carpool.controller;
 
+import com.tutransporte.carpool.model.Destino;
 import com.tutransporte.carpool.model.Viaje;
+import com.tutransporte.carpool.repository.DestinoRepository;
 import com.tutransporte.carpool.repository.ViajeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,33 +18,27 @@ public class ViajeController {
     @Autowired
     private ViajeRepository viajeRepository;
 
+    @Autowired
+    private DestinoRepository destinoRepository;
+
     @GetMapping
-    public List<Viaje> getAllViajes(
-            @RequestParam(required = false) Long usuarioId,
+    public List<Viaje> filtrarViajes(
+            @RequestParam(required = false) String destino,
             @RequestParam(required = false) String fecha,
-            @RequestParam(required = false) Long destinoId
+            @RequestParam(required = false) Double precio,
+            @RequestParam(required = false) Integer plazas,
+            @RequestParam(required = false) Long usuarioId
     ) {
-        if (usuarioId != null) {
-            return viajeRepository.findByUsuarioId(usuarioId);
-        }
-
-        if (fecha != null && destinoId != null) {
-            return viajeRepository.findByFechaAndDestinoId(fecha, destinoId);
-        }
-
-        if (fecha != null) {
-            return viajeRepository.findByFecha(fecha);
-        }
-
-        if (destinoId != null) {
-            return viajeRepository.findByDestinoId(destinoId);
-        }
-
-        return viajeRepository.findAll();
+        return viajeRepository.findAll().stream()
+            .filter(v -> destino == null || 
+                (v.getDestino() != null && destino.equalsIgnoreCase(v.getDestino().getCiudad())))
+            .filter(v -> fecha == null || fecha.equalsIgnoreCase(v.getFecha()))
+            .filter(v -> precio == null || precio.equals(v.getPrecio()))
+            .filter(v -> plazas == null || plazas.equals(v.getPlazas()))
+            .filter(v -> usuarioId == null || 
+                (v.getUsuario() != null && usuarioId.equals(v.getUsuario().getId())))
+            .toList();
     }
-
-
-
 
     @GetMapping("/{id}")
     public Optional<Viaje> getViajeById(@PathVariable Long id) {
@@ -51,34 +47,32 @@ public class ViajeController {
 
     @PostMapping
     public Viaje createViaje(@RequestBody Viaje viaje) {
+        if (viaje.getDestino() != null && viaje.getDestino().getId() != null) {
+            Long destinoId = viaje.getDestino().getId();
+            Destino destinoExistente = destinoRepository.findById(destinoId)
+                .orElseThrow(() -> new RuntimeException("Destino no encontrado"));
+            viaje.setDestino(destinoExistente);
+        }
         return viajeRepository.save(viaje);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Viaje> updateViaje(@PathVariable Long id, @RequestBody Viaje updatedViaje) {
         return viajeRepository.findById(id)
-            .map(viaje -> {
-                viaje.setFecha(updatedViaje.getFecha());
-                viaje.setHora(updatedViaje.getHora());
-                viaje.setPrecio(updatedViaje.getPrecio());
-                viaje.setPlazas(updatedViaje.getPlazas());
-                viaje.setUsuario(updatedViaje.getUsuario());
-                viaje.setVehiculo(updatedViaje.getVehiculo());
-                viaje.setDestino(updatedViaje.getDestino());
-                return ResponseEntity.ok(viajeRepository.save(viaje));
+            .map(v -> {
+                updatedViaje.setId(id);
+                return ResponseEntity.ok(viajeRepository.save(updatedViaje));
             })
             .orElseGet(() -> ResponseEntity.notFound().build());
-            
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteViaje(@PathVariable Long id) {
         return viajeRepository.findById(id)
-            .map(viaje -> {
+            .map(v -> {
                 viajeRepository.deleteById(id);
-                return ResponseEntity.noContent().build();
+                return ResponseEntity.noContent().build();	
             })
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
 }

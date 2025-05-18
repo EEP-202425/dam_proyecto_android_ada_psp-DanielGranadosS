@@ -23,6 +23,11 @@ import com.tutransporte.carpool.repository.ViajeRepository;
 @RestController
 @RequestMapping("/api/destinos")
 public class DestinoController {
+	
+	@GetMapping("/api/destinos")
+	public List<Destino> getAllDestinos() {
+	    return destinoRepository.findAll();
+	}
 
     @Autowired
     private DestinoRepository destinoRepository;

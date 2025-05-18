@@ -41,9 +41,16 @@ fun ViajeList() {
             .fillMaxSize()
             .padding(16.dp)) {
             items(viajes) { viaje ->
-                ViajeCard(viaje) { viajeSeleccionado ->
-                    println("Viaje seleccionado: ${viajeSeleccionado.id}")
-                }
+                ViajeCard(
+                    viaje = viaje,
+                    onEdit = { viajeSeleccionado ->
+                        println("Editar: ${viajeSeleccionado.id}")
+                    },
+                    onDelete = { id ->
+                        println("Eliminar viaje con ID: $id")
+                    }
+                )
+
             }
 
         }
